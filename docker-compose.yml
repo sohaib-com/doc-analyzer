@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: docanalyzer
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DATABASE_URL=postgresql+asyncpg://user:password@postgres/docanalyzer
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8800:8000"  # Internal port 8000 exposed on 8800
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    build: ./frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8800
+    ports:
+      - "5173:3000"  # React dev server or production server
+    depends_on:
+      - backend
+
+volum
